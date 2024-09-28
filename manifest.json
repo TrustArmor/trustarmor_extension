@@ -1,0 +1,31 @@
+{
+    "manifest_version": 3,
+    "name": "TrustArmor Extension",
+    "description": "Secure your data and privacy with TrustArmor",
+    "version": "1.1",
+    "action": {
+      "default_popup": "trustarmor.html",
+      "default_icon": "ta_only_bg.png"
+    },
+    "permissions": [
+      "activeTab", 
+      "notifications", 
+      "tabs", 
+      "storage",
+      "webRequest",
+      "webRequestBlocking"],
+    "host_permissions": [
+        "https://*/*",
+        "http://*/*"
+      ],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "content_scripts": [
+        {
+          "matches": ["http://127.0.0.1/*","https://*/*", "http://*/*"],
+          "js": ["contentScript.js"],
+          "run_at": "document_start"
+        }
+      ]
+  }
