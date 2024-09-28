@@ -58,7 +58,7 @@ function analyzeUrl(url, tabId) {
   .then(data => {
     console.log("Received response:", data);
     const result = data.result;
-    if (result === 'malware' || result === 'phishing' || result === 'defacement') {
+    if (result === 'malicious' ) { // || result === 'phishing' || result === 'defacement'
       notifyUser(tabId, "Malicious Link Detected", `This site is categorized as ${result}. Proceed with caution.`, true, url);
     } else {
       notifyUser(tabId, "Safe Link", `This site is categorized as ${result}.`, false, url);
