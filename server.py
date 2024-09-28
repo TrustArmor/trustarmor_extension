@@ -2,33 +2,12 @@ from flask import Flask, request, jsonify
 import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 import logging
-import re
-import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
 from train_model import train_model
-
-
-class FeatureExtractor(BaseEstimator, TransformerMixin):
-    def fit(self, x, y=None):
-        return self
-
-    def transform(self, urls):
-        features = []
-        for url in urls:
-            feature = []
-            feature.append(len(url)) 
-            feature.append(len(re.findall(r'[^a-zA-Z0-9]', url)))  
-            feature.append(len(url.split('.')) - 2) 
-            suspicious_keywords = ['free', 'download', 'click', 'win', 'prize', 'example']
-            feature.append(sum(1 for keyword in suspicious_keywords if keyword in url.lower()))
-            features.append(feature)
-        return np.array(features)
 
 app = Flask(__name__)
 
 model = joblib.load('url_classifier.pkl')
 vectorizer = joblib.load('vectorizer.pkl')
-tfidf_transformer = joblib.load('tfidf_transformer.pkl')
 
 logging.basicConfig(level=logging.INFO)
 
@@ -47,11 +26,12 @@ def predict():
         return jsonify({"error": "No URL provided"}), 400
 
     try:
-        url_counts = vectorizer.transform([url])
-        url_tfidf = tfidf_transformer.transform(url_counts)
-        prediction = model.predict(url_tfidf)
+        url_vectorized = vectorizer.transform([url])
+        prediction = model.predict(url_vectorized)
         label_mapping = {
             0: 'benign',
+            # 1: 'defacement',
+            # 2: 'phishing',
             1: 'malicious'
         }
         result = label_mapping.get(prediction[0], 'unknown')

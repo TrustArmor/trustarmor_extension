@@ -1,20 +1,3 @@
-chrome.webRequest.onBeforeRequest.addListener(
-  async(details)=>{
-    const url=details.url;
-    if(url.startsWith('chrome-extension://')) return {cancel:false}
-    const result=await classifyURL(url);
-
-    if(result.isSafe){
-      return{cancel:false};
-    }else{
-      notifyUser(details.tabId, url, details.frameId);
-      return{cancel:true};
-    }
-  },
-  {urls:["<all_urls>"]},
-  ["blocking"]
-)
-
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
   if (changeInfo.status === "complete" && tab.url && tab.url.startsWith("http")) {
     setTimeout(function() {
@@ -53,6 +36,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   }
 });
 
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  console.log("Received message in background script:", request);
+  if (request.action === "analyzeUrl") {
+    console.log("Analyzing URL:", request.url);
+    analyzeUrl(request.url, request.tabId);
+    sendResponse({ status: "URL analysis started" });
+  }
+});
 
 function analyzeUrl(url, tabId) {
   console.log("Sending POST request to /predict:", url);
@@ -67,12 +58,10 @@ function analyzeUrl(url, tabId) {
   .then(data => {
     console.log("Received response:", data);
     const result = data.result;
-    if (result === 'malicious') {
+    if (result === 'malware' || result === 'phishing' || result === 'defacement') {
       notifyUser(tabId, "Malicious Link Detected", `This site is categorized as ${result}. Proceed with caution.`, true, url);
-    } else if (result === 'benign') {
-      notifyUser(tabId, "Safe Link", `This site is categorized as ${result}.`, false, url);
     } else {
-      notifyUser(tabId, "Analysis Error", "Unable to categorize this site. Try again later.", false, url);
+      notifyUser(tabId, "Safe Link", `This site is categorized as ${result}.`, false, url);
     }
   })
   .catch(err => {
@@ -81,7 +70,6 @@ function analyzeUrl(url, tabId) {
   });
 }
 
-
 function notifyUser(tabId, title, message, isMalicious, url) {
   console.log("Notifying user:", title, message);
   chrome.notifications.create({
@@ -89,7 +77,7 @@ function notifyUser(tabId, title, message, isMalicious, url) {
     iconUrl: "ta_name.png",
     title: title,
     message: message,
-    buttons: isMalicious ? [{ title: "Proceed Anyway", href }, { title: "Go Back" }] : [],
+    buttons: isMalicious ? [{ title: "Proceed Anyway" }, { title: "Go Back" }] : [],
   }, function (notificationId) {
     chrome.notifications.onButtonClicked.addListener(function (notifId, buttonIndex) {
       if (notifId === notificationId) {
@@ -102,4 +90,3 @@ function notifyUser(tabId, title, message, isMalicious, url) {
     });
   });
 }
-

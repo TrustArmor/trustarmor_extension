@@ -50,9 +50,3 @@ function showLoadingIndicator() {
     }, 500);
   }, 2000);
 }
-// function hideLoadingIndicator() {
-//   const loadingDiv = document.getElementById('loading-indicator');
-//   if (loadingDiv) {
-//     document.body.removeChild(loadingDiv);
-//   }
-// }

@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "TrustArmor Extension",
-    "description": "Secure your data and privacy with TrustArmor",
+    "description": "Protect users from malicious URLs by analzing links before loading.",
     "version": "1.1",
     "action": {
       "default_popup": "trustarmor.html",
